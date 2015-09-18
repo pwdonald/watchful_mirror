@@ -13,7 +13,7 @@
     },
     "window": {
         "title": "mirror",
-        "toolbar": true,
+        "toolbar": false,
         "frame": false,
         "width": 250,
         "max-width": 250,
