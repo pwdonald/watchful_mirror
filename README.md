@@ -8,8 +8,8 @@ It hides itself after 5 seconds of no movement, when movement is detected it wil
 It works best when you have a docked laptop that you can point behind you at an angle. If you find that there are too many false positives you can increase the tolerance threshold in the config file.
 
 In debug mode the app will overlay the movement highlights.
- (Coming soon)
-Start from commmand line or download a platform specific prepackaged archive.
+ 
+Start from commmand line or download a platform specific prepackaged archive. (Coming soon)
 
 ## Install
 ```
