@@ -13,9 +13,9 @@ Start from commmand line or download a platform specific prepackaged archieve.
 
 ## Install
 ```
-git clone https://github.com/pwdonald/watchful_mirror.git
-
-npm install
+1. git clone https://github.com/pwdonald/watchful_mirror.git
+2. cd watchful_mirror
+3. npm install
 ```
 
 ## Run
