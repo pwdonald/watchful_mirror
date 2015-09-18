@@ -1,11 +1,10 @@
 {
     "name": "mirror",
-    "version": "0.0.1",
+    "version": "0.1.0",
     "description": "Use your webcam to alert to activity behind.",
     "main": "index.html",
     "scripts": {
-        "start": "nw",
-        "test": "echo \"Error: no test specified\" && exit 1"
+        "start": "nw"
     },
     "author": "Donald Jones <donald@jones.engineer>",
     "license": "MIT",
@@ -14,7 +13,7 @@
     },
     "window": {
         "title": "mirror",
-        "toolbar": false,
+        "toolbar": true,
         "frame": false,
         "width": 250,
         "max-width": 250,

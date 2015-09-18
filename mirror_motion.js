@@ -1,22 +1,24 @@
 var gui = global.window.nwDispatcher.requireNwGui();
-var window1 = gui.Window.get();
+var guiWindow = gui.Window.get();
+var config = require('./config.json');
+
 var previousLocation = {
     x: 0,
     y: 0
 };
 
 var hideBody = function() {
-    if (window1.x > 0 && window1.y > 0) {
-        previousLocation.x = window1.x;
-        previousLocation.y = window1.y;
+    if (guiWindow.x > 0 && guiWindow.y > 0) {
+        previousLocation.x = guiWindow.x;
+        previousLocation.y = guiWindow.y;
     }
-    window1.y = -500;
-    window1.x = -500;
+    guiWindow.y = -500;
+    guiWindow.x = -500;
 };
 
 var showBody = function() {
-    window1.x = previousLocation.x;
-    window1.y = previousLocation.y;
+    guiWindow.x = previousLocation.x;
+    guiWindow.y = previousLocation.y;
 };
 
 var MirrorMotion = function() {
@@ -36,8 +38,8 @@ var MirrorMotion = function() {
             this.width = this.canvas.width;
             this.height = this.canvas.height;
 
-            previousLocation.x = window1.x;
-            previousLocation.y = window1.y;
+            previousLocation.x = guiWindow.x;
+            previousLocation.y = guiWindow.y;
 
             for (var i = 0; i < 2; i++) {
                 this.buffers.push(new Uint8Array(this.width * this.height));
@@ -51,6 +53,10 @@ var MirrorMotion = function() {
         start: function(stream) {
             this.video.src = URL.createObjectURL(stream);
             this.video.play();
+
+            if (config.debug) {
+                this.canvas.style.visibility = 'visible';
+            }
 
             requestAnimationFrame(this.analyzeFrame.bind(this));
         },
@@ -82,7 +88,7 @@ var MirrorMotion = function() {
 
         drawFrame: function(frame) {
             if (this.motionTimer < 50000) {
-                if (window1.x < 0 || window1.y < 0) {
+                if (guiWindow.x < 0 || guiWindow.y < 0) {
                     showBody();
                 }
 
@@ -92,7 +98,7 @@ var MirrorMotion = function() {
 
                 this.hideTimeout = window.setTimeout(function() {
                     hideBody();
-                }, 5000);
+                }, config.timer);
             }
             this.context.putImageData(frame, 0, 0);
         },
@@ -122,7 +128,7 @@ var MirrorMotion = function() {
 
         calculateLightnessDiff(index, value) {
             return this.buffers.some(function(buffer) {
-                var diff = Math.abs(value - buffer[index]) >= 55;
+                var diff = Math.abs(value - buffer[index]) >= config.threshold;
                 this.motionTimer++;
 
                 if (diff) {

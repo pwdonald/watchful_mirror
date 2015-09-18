@@ -1,0 +1,5 @@
+{
+    "timer": 5000,
+    "threshold": 55,
+    "debug": false
+}
