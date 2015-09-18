@@ -111,13 +111,8 @@ var MirrorMotion = function() {
             for (var i = 0, j = 0; i < buffer.length; i++, j += 4) {
                 var current = this.calulateLightnessValue(data[j], data[j + 1], data[j + 2]);
 
-                // Set color to black.
                 data[j] = data[j + 1] = data[j + 2] = 255;
-
-                // Full opacity for changes.
                 data[j + 3] = 255 * this.calculateLightnessDiff(i, current);
-
-                // Store current lightness value.
                 buffer[i] = current;
             }
         },
