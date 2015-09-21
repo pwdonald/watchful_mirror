@@ -1,6 +1,16 @@
-var gui = global.window.nwDispatcher.requireNwGui();
-var guiWindow = gui.Window.get();
-var config = require('./config.json');
+var gui = global.window.nwDispatcher.requireNwGui(),
+    guiWindow = gui.Window.get(),
+    config = require('./config.json'),
+    buffers = [],
+    index = 0,
+    width = 0,
+    height = 0,
+    motionTimer = 0,
+    context,
+    canvas,
+    video,
+    win,
+    hideTimeout;
 
 var previousLocation = {
     x: 0,
@@ -21,117 +31,106 @@ var showBody = function() {
     guiWindow.y = previousLocation.y;
 };
 
-var MirrorMotion = function() {
-    return {
-        buffers: [],
-        index: 0,
-        width: 0,
-        height: 0,
+var initialize = function(videoElement, canvasElement) {
+    win = gui.Window.get();
+    video = document.getElementById(videoElement);
+    canvas = document.getElementById(canvasElement);
+    context = canvas.getContext('2d');
+    motionTimer = 0;
 
-        initialize: function(videoElement, canvasElement) {
-            this.win = gui.Window.get();
-            this.video = document.getElementById(videoElement);
-            this.canvas = document.getElementById(canvasElement);
-            this.context = this.canvas.getContext('2d');
-            this.motionTimer = 0;
+    width = canvas.width;
+    height = canvas.height;
 
-            this.width = this.canvas.width;
-            this.height = this.canvas.height;
+    previousLocation.x = guiWindow.x;
+    previousLocation.y = guiWindow.y;
 
-            previousLocation.x = guiWindow.x;
-            previousLocation.y = guiWindow.y;
+    for (var i = 0; i < 2; i++) {
+        buffers.push(new Uint8Array(width * height));
+    }
 
-            for (var i = 0; i < 2; i++) {
-                this.buffers.push(new Uint8Array(this.width * this.height));
-            }
+    navigator.webkitGetUserMedia({
+        video: true
+    }, start, fail);
+};
 
-            navigator.webkitGetUserMedia({
-                video: true
-            }, this.start.bind(this), this.fail);
-        },
+var start = function(stream) {
+    video.src = URL.createObjectURL(stream);
+    video.play();
 
-        start: function(stream) {
-            this.video.src = URL.createObjectURL(stream);
-            this.video.play();
+    if (config.debug) {
+        canvas.style.visibility = 'visible';
+    }
 
-            if (config.debug) {
-                this.canvas.style.visibility = 'visible';
-            }
+    requestAnimationFrame(analyzeFrame);
+};
 
-            requestAnimationFrame(this.analyzeFrame.bind(this));
-        },
+var fail = function() {
+    alert('Failed to start video stream. Is something else using your camera?');
+};
 
-        fail: function() {
-            alert('Failed to start video stream. Is something else using your camera?');
-        },
+var getFrame = function() {
+    try {
+        context.drawImage(video, 0, 0, width, height);
+    } catch (e) {
+        return;
+    }
 
-        getFrame: function() {
-            try {
-                this.context.drawImage(this.video, 0, 0, this.width, this.height);
-            } catch (e) {
-                return;
-            }
+    return context.getImageData(0, 0, width, height);
+};
 
-            return this.context.getImageData(0, 0, this.width, this.height);
-        },
+var analyzeFrame = function() {
+    var frame = getFrame();
 
-        analyzeFrame: function() {
-            var frame = this.getFrame();
+    if (frame) {
+        markFrame(frame.data);
+        drawFrame(frame);
+    }
 
-            if (frame) {
-                this.markFrame(frame.data);
-                this.drawFrame(frame);
-            }
+    requestAnimationFrame(analyzeFrame);
+};
 
-            requestAnimationFrame(this.analyzeFrame.bind(this));
-        },
-
-        drawFrame: function(frame) {
-            if (this.motionTimer < 50000) {
-                if (guiWindow.x < 0 || guiWindow.y < 0) {
-                    showBody();
-                }
-
-                if (this.hideTimeout) {
-                    window.clearTimeout(this.hideTimeout);
-                }
-
-                this.hideTimeout = window.setTimeout(function() {
-                    hideBody();
-                }, config.timer);
-            }
-            this.context.putImageData(frame, 0, 0);
-        },
-
-        markFrame: function(data) {
-            var buffers = this.buffers;
-
-            var buffer = buffers[this.index++ % buffers.length];
-
-            for (var i = 0, j = 0; i < buffer.length; i++, j += 4) {
-                var current = this.calulateLightnessValue(data[j], data[j + 1], data[j + 2]);
-
-                data[j] = data[j + 1] = data[j + 2] = 255;
-                data[j + 3] = 255 * this.calculateLightnessDiff(i, current);
-                buffer[i] = current;
-            }
-        },
-
-        calulateLightnessValue(r, g, b) {
-            return (Math.min(r, g, b) + Math.max(r, g, b)) / 255 * 50;
-        },
-
-        calculateLightnessDiff(index, value) {
-            return this.buffers.some(function(buffer) {
-                var diff = Math.abs(value - buffer[index]) >= config.threshold;
-                this.motionTimer++;
-
-                if (diff) {
-                    this.motionTimer = 0;
-                }
-
-                return diff;
-            }.bind(this));
+var drawFrame = function(frame) {
+    if (motionTimer < 50000) {
+        if (guiWindow.x < 0 || guiWindow.y < 0) {
+            showBody();
         }
-    };
+
+        if (hideTimeout) {
+            window.clearTimeout(hideTimeout);
+        }
+
+        hideTimeout = window.setTimeout(function() {
+            hideBody();
+        }, config.timer);
+    }
+    context.putImageData(frame, 0, 0);
+};
+
+var markFrame = function(data) {
+    var buffer = buffers[index++ % buffers.length];
+
+    for (var i = 0, j = 0; i < buffer.length; i++, j += 4) {
+        var current = calulateLightnessValue(data[j], data[j + 1], data[j + 2]);
+
+        data[j] = data[j + 1] = data[j + 2] = 255;
+        data[j + 3] = 255 * calculateLightnessDiff(i, current);
+        buffer[i] = current;
+    }
+};
+
+var calulateLightnessValue = function(r, g, b) {
+    return (Math.min(r, g, b) + Math.max(r, g, b)) / 255 * 50;
+};
+
+var calculateLightnessDiff = function(index, value) {
+    return buffers.some(function(buffer) {
+        var diff = Math.abs(value - buffer[index]) >= config.threshold;
+        motionTimer++;
+
+        if (diff) {
+            motionTimer = 0;
+        }
+
+        return diff;
+    });
 };
