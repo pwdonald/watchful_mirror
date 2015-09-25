@@ -74,21 +74,25 @@
         visibility: hidden;
     }
 
-    #close {
+    #exit {
         display: block;
         position: absolute;
-        top: 0;
-        right: 1em;
-        color: black;
-        background: white;
+        width: 100%;
+        bottom: 0;
+        right: 0;
+        color: white;
+        background-color: rgba(0, 0, 0, 0.5);
+        text-align: center;
+        text-decoration: bolder;
+        font-size: small;
         z-index: 999;
-        border: 1px solid black;
+        visibility: hidden;
     }
 
-    #close:hover {
-        background: black;
-        color: white;
-    }
+    #exit:hover {
+        color: black;
+        background-color: white;
+    }    
 </style>
 <div>
     <div>
@@ -97,6 +101,7 @@
         <canvas id="canvasFeed"></canvas>
         <canvas id="canvasMask"></canvas>
         <div id="maskDirections">Draw motion detection exclusion areas</div>
+        <div id="exit">Exit</div>   
     </div>
 </div>
 <script src="mirror_motion.js"></script>

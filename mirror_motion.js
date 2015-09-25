@@ -85,6 +85,7 @@ var initialize = function(videoElement, canvasElement, canvasMaskElement) {
  * @param canvasMaskElement
  */
 var initializeCanvasMask = function(canvasMaskElement) {
+    var exitButton = document.getElementById('exit');
     canvasMask = document.getElementById(canvasMaskElement);
     maskContext = canvasMask.getContext('2d');
 
@@ -112,6 +113,10 @@ var initializeCanvasMask = function(canvasMaskElement) {
 
     canvasMask.addEventListener('mouseup', function() {
         canvasMask.removeEventListener('mousemove', onMaskPaint, false);
+    }, false);
+
+    exitButton.addEventListener('mousedown', function() {
+        gui.App.closeAllWindows();
     }, false);
 
     guiWindow.window.addEventListener('keypress', function(e) {
@@ -143,12 +148,13 @@ var clearMask = function() {
 var toggleMaskOpacity = function() {
     var dragHandle = document.getElementById('draggableAppHandle');
     var maskDirections = document.getElementById('maskDirections');
+    var exitButton = document.getElementById('exit');
 
     if (canvasMask.style.visibility === 'hidden' || canvasMask.style.visibility === '') {
-        canvasMask.style.visibility = maskDirections.style.visibility = 'visible';
+        exitButton.style.visibility = canvasMask.style.visibility = maskDirections.style.visibility = 'visible';
         dragHandle.style.display = 'none';
     } else {
-        canvasMask.style.visibility = maskDirections.style.visibility = 'hidden';
+        exitButton.style.visibility = canvasMask.style.visibility = maskDirections.style.visibility = 'hidden';
         dragHandle.style.display = '';
     }
 };
