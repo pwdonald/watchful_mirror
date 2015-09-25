@@ -12,7 +12,8 @@ var gui = global.window.nwDispatcher.requireNwGui(),
     canvas,
     video,
     win,
-    hideTimeout;
+    hideTimeout,
+    isDrawing = false;
 
 var previousLocation = {
     x: 0,
@@ -115,17 +116,18 @@ var initializeCanvasMask = function(canvasMaskElement) {
 
     guiWindow.window.addEventListener('keypress', function(e) {
         switch (e.which) {
-        /**
-         * Toggles mask transparency when the spacebar key is pressed to show/hide
-         * the masked region that is excluded
-         */
+            /**
+             * Toggles mask transparency when the spacebar key is pressed to show/hide
+             * the masked region that is excluded
+             */
             case SPACE_KEY:
+                isDrawing = !isDrawing;
                 toggleMaskOpacity();
                 break;
 
-        /**
-         * Clears the active mask exclusion area when the c key is pressed
-         */
+                /**
+                 * Clears the active mask exclusion area when the c key is pressed
+                 */
             case C_KEY:
                 clearMask();
                 break;
@@ -145,8 +147,7 @@ var toggleMaskOpacity = function() {
     if (canvasMask.style.visibility === 'hidden' || canvasMask.style.visibility === '') {
         canvasMask.style.visibility = maskDirections.style.visibility = 'visible';
         dragHandle.style.display = 'none';
-    }
-    else {
+    } else {
         canvasMask.style.visibility = maskDirections.style.visibility = 'hidden';
         dragHandle.style.display = '';
     }
@@ -212,7 +213,9 @@ var drawFrame = function(frame) {
         }
 
         hideTimeout = window.setTimeout(function() {
-            hideBody();
+            if (!isDrawing) {
+                hideBody();
+            }
         }, config.timer);
     }
     context.putImageData(frame, 0, 0);
@@ -233,8 +236,7 @@ var markFrame = function(data, maskData) {
             data[j] = data[j + 1] = data[j + 2] = 255;
             data[j + 3] = 0;
             motionTimer++;
-        }
-        else {
+        } else {
             data[j] = data[j + 1] = data[j + 2] = 255;
             data[j + 3] = 255 * calculateLightnessDiff(i, current);
         }
